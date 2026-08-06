@@ -1,4 +1,15 @@
+<?php 
 
+function check_sign($number){
+  if($number > 0){
+    return "positive";
+  } elseif($number < 0){
+    return "negative";
+  } else {
+    return "zero";
+  }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,11 +30,12 @@
 
     if($_SERVER['REQUEST_METHOD'] == 'POST'){
       var_dump($_POST);
-      $number = $_POST['number'];
+      $number = $_POST['number'] ?? 0;
       echo "<h2>Result:</h2>";
-      if($number > 0){
+      $sign = check_sign($number);
+      if($sign == "positive"){
         echo "<p>The number $number is positive.</p>";
-      } elseif($number < 0){
+      } elseif($sign == "negative"){
         echo "<p>The number $number is negative.</p>";
       } else {
         echo "<p>The number is zero.</p>";
