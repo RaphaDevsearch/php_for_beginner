@@ -314,6 +314,24 @@
       <span class="card-tag">Rep 03 · multi-input validation</span>
       <h2>Sum Calculator</h2>
       <p class="desc">Enter two numbers. Add them together — validate both before doing the math.</p>
+      
+      <?php 
+        function calculate_sum($n1, $n2){return $n1 + $n2;}
+        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+          $input1 = $_POST['num1'] ?? '';
+          $input2 = $_POST['num2'] ?? '';
+          if($input1 === '' || !is_numeric($input1) || $input2 === '' || !is_numeric($input2)){
+            echo '<div class="result is-filled error">Please enter valid numbers for both fields.</div>';
+          } else {
+            $num1 = (float) $input1;
+            $num2 = (float) $input2;
+            $sum = calculate_sum($num1, $num2);
+            $safeNum1 = htmlspecialchars($input1);
+            $safeNum2 = htmlspecialchars($input2);
+            echo "<div class='result is-filled'>The sum of $safeNum1 and $safeNum2 is $sum.</div>";
+          }
+        }
+      ?>
 
       <form method="POST" action="">
         <div class="row-2">
@@ -343,6 +361,20 @@
       <span class="card-tag">Rep 04 · modulo</span>
       <h2>Even or Odd Checker</h2>
       <p class="desc">Enter a number. Use <code style="font-family:inherit;">%</code> to decide even or odd — think about how to handle decimals.</p>
+
+      <?php
+        if($_SERVER['REQUEST_METHOD'] == 'POST'){
+          $input = $_POST['number'] ?? '';
+          if($input === '' || !is_numeric($input)){
+            echo '<div class="result is-filled error">Please enter a valid number.</div>';
+          } else {
+            $number = (float) $input;
+            $isEven = ($number % 2 === 0);
+            $safeNumber = htmlspecialchars($input);
+            echo "<div class='result is-filled'>The number $safeNumber is " . ($isEven ? 'even' : 'odd') . ".</div>";
+          }
+        }
+      ?>
 
       <form method="POST" action="">
         <div class="field">
