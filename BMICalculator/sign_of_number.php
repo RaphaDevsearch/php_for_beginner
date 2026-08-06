@@ -9,12 +9,29 @@ function check_sign($number){
     return "zero";
   }
 }
+
+$numberInput = $_POST['number'] ?? '';
+$resultHtml = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if ($numberInput === '' || !is_numeric($numberInput)) {
+        $resultHtml = '<p class="error">Please enter a valid number.</p>';
+    } else {
+        $number = (float) $numberInput;
+        $sign = check_sign($number);
+        $safeNumber = htmlspecialchars($numberInput);
+        $resultHtml = "<h2>Result:</h2><p>The number $safeNumber is $sign.</p>";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Sign of a Number</title>
+  <style>
+    .error { color: #D9534F; }
+  </style>
 </head>
 <body>
 
@@ -22,27 +39,13 @@ function check_sign($number){
 
   <form method="POST" action="">
     <label for="number">Enter a number:</label>
-    <input type="number" step="any" name="number" id="number" placeholder="e.g. -7 or 12">
+    <input type="number" step="any" name="number" id="number"
+           placeholder="e.g. -7 or 12"
+           value="<?= htmlspecialchars($numberInput) ?>">
     <button type="submit">Check</button>
   </form>
 
-  <?php 
-
-    if($_SERVER['REQUEST_METHOD'] == 'POST'){
-      var_dump($_POST);
-      $number = $_POST['number'] ?? 0;
-      echo "<h2>Result:</h2>";
-      $sign = check_sign($number);
-      if($sign == "positive"){
-        echo "<p>The number $number is positive.</p>";
-      } elseif($sign == "negative"){
-        echo "<p>The number $number is negative.</p>";
-      } else {
-        echo "<p>The number is zero.</p>";
-      }
-    }
-  
-  ?>
+  <?= $resultHtml ?>
 
 </body>
 </html>
