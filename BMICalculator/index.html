@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMI Calculator — Build Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F6FB;
+    --paper-dim:#ECEEF7;
+    --ink:#14162B;
+    --ink-soft:#54577A;
+    --primary:#5A4FCF;
+    --primary-dark:#3D34A8;
+    --amber:#F2A93B;
+    --teal:#2FB6A3;
+    --line:#DEE1F0;
+    --white:#FFFFFF;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Inter', sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:'Space Grotesk', sans-serif; letter-spacing:-0.02em;}
+  a{text-decoration:none; color:inherit;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 24px;}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--primary);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{content:''; width:24px; height:2px; background:var(--amber); display:inline-block;}
+
+  /* HEADER */
+  header{
+    position:sticky; top:0; z-index:100;
+    background:rgba(245,246,251,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav.wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:64px;
+  }
+  .logo{font-family:'JetBrains Mono', monospace; font-weight:600; font-size:0.95rem; display:flex; gap:8px;}
+  .logo .tag{color:var(--primary);}
+  .logo .tag2{color:var(--amber);}
+  .progress-pill{
+    font-family:'JetBrains Mono', monospace; font-size:0.78rem;
+    background:var(--white); border:1px solid var(--line); border-radius:20px;
+    padding:6px 14px; color:var(--ink-soft);
+  }
+  .progress-pill span{color:var(--primary); font-weight:600;}
+
+  /* HERO */
+  .hero{padding:72px 0 40px;}
+  .hero h1{font-size:clamp(2rem, 4.5vw, 2.9rem); font-weight:700; line-height:1.1; max-width:620px;}
+  .hero h1 .accent{color:var(--primary);}
+  .hero p{margin-top:18px; color:var(--ink-soft); font-size:1.05rem; max-width:560px;}
+  .meta-row{display:flex; gap:12px; margin-top:26px; flex-wrap:wrap;}
+  .meta-chip{
+    display:flex; align-items:center; gap:8px;
+    background:var(--white); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; font-size:0.85rem; color:var(--ink-soft);
+  }
+  .meta-chip b{color:var(--ink); font-family:'Space Grotesk', sans-serif;}
+
+  /* TIMELINE */
+  .timeline-sec{padding:20px 0 60px;}
+  .timeline{position:relative; padding-left:38px;}
+  .timeline::before{
+    content:''; position:absolute; left:13px; top:6px; bottom:6px; width:2px;
+    background:linear-gradient(to bottom, var(--primary), var(--teal), var(--amber));
+    opacity:0.5;
+  }
+  .step{position:relative; padding:0 0 34px 26px;}
+  .step:last-child{padding-bottom:0;}
+  .step::before{
+    content:attr(data-n);
+    position:absolute; left:-38px; top:0;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--white); border:2px solid var(--primary);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-size:0.72rem; font-weight:600;
+    color:var(--primary);
+  }
+  .step-card{
+    background:var(--white); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 22px;
+  }
+  .step-card h3{font-size:1.05rem; margin-bottom:6px;}
+  .step-card p{font-size:0.92rem; color:var(--ink-soft);}
+  .step-card code, .step-card pre{
+    font-family:'JetBrains Mono', monospace; font-size:0.82rem;
+    background:var(--ink); color:#D7D9F5;
+    padding:2px 6px; border-radius:5px;
+  }
+  .step-card pre{display:block; padding:14px 16px; margin-top:10px; overflow-x:auto; line-height:1.5;}
+  .learn-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:12px; font-family:'JetBrains Mono', monospace; font-size:0.76rem;
+    background:var(--paper-dim); color:var(--teal);
+    padding:5px 10px; border-radius:20px; border:1px solid var(--line);
+  }
+  .learn-tag::before{content:'◆'; font-size:0.6rem;}
+
+  /* CATEGORY TABLE (inside step 6) */
+  .cat-table{width:100%; margin-top:12px; border-collapse:collapse; font-size:0.88rem;}
+  .cat-table th, .cat-table td{padding:9px 12px; text-align:left; border-bottom:1px solid var(--line);}
+  .cat-table th{font-family:'Space Grotesk', sans-serif; color:var(--ink-soft); font-weight:600;}
+  .cat-table td.pill{font-weight:600;}
+  .pill.under{color:var(--primary);}
+  .pill.normal{color:var(--teal);}
+  .pill.over{color:var(--amber);}
+  .pill.obese{color:#D9534F;}
+
+  /* RECAP */
+  .recap{
+    background:var(--ink); border-radius:var(--radius); padding:32px 28px; margin-top:8px;
+    color:#E4E5F5;
+  }
+  .recap h2{color:var(--white); font-size:1.3rem; margin-bottom:16px;}
+  .recap-grid{display:flex; flex-wrap:wrap; gap:10px;}
+  .recap-grid span{
+    font-family:'JetBrains Mono', monospace; font-size:0.8rem;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+    padding:7px 12px; border-radius:20px; color:#D7D9F5;
+  }
+
+  footer{padding:36px 0 50px; text-align:center; color:var(--ink-soft); font-size:0.85rem;}
+
+  @media (max-width:600px){
+    .hero{padding:56px 0 30px;}
+    .timeline{padding-left:30px;}
+    .step{padding-left:20px;}
+    .step::before{width:24px; height:24px; left:-32px; font-size:0.65rem;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="logo"><span class="tag">&lt;?php</span> bmi <span class="tag2">?&gt;</span></div>
+    <div class="progress-pill"><span>8</span> steps to a working calculator</div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">project 01 · beginner</div>
+    <h1>Build the <span class="accent">BMI Calculator</span>, one clean step at a time</h1>
+    <p>The smallest real PHP project you can ship: a form, a calculation, a result. Follow these eight steps in order — each one adds exactly one new concept.</p>
+    <div class="meta-row">
+      <div class="meta-chip"><b>Formula</b>&nbsp;weight ÷ height²</div>
+      <div class="meta-chip"><b>Files</b>&nbsp;1 (index.php)</div>
+      <div class="meta-chip"><b>Time</b>&nbsp;~1–2 hours</div>
+    </div>
+  </div>
+</section>
+
+<section class="timeline-sec">
+  <div class="wrap">
+    <div class="timeline">
+
+      <div class="step" data-n="1">
+        <div class="step-card">
+          <h3>Static HTML shell</h3>
+          <p>Write the form first with no PHP logic at all: two inputs (weight, height), a submit button. Just get it rendering in the browser.</p>
+          <span class="learn-tag">form structure, method="POST"</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="2">
+        <div class="step-card">
+          <h3>Submit the form to itself</h3>
+          <p>Set the action to the same page so submitting reloads it. Don't calculate anything yet — just inspect what PHP receives.</p>
+          <pre>var_dump($_POST);</pre>
+          <span class="learn-tag">$_POST, GET vs POST</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="3">
+        <div class="step-card">
+          <h3>Detect the submission</h3>
+          <p>Wrap your logic so it only runs after the form is submitted, not on first page load.</p>
+          <pre>if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // calculation goes here
+}</pre>
+          <span class="learn-tag">request method checking</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="4">
+        <div class="step-card">
+          <h3>Validate the input</h3>
+          <p>Check that weight and height aren't empty and are numeric, and that height isn't zero — division by zero will break the calculation.</p>
+          <span class="learn-tag">is_numeric(), input guarding</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="5">
+        <div class="step-card">
+          <h3>Do the calculation</h3>
+          <p>Apply the BMI formula. If your form takes height in cm, convert to meters first.</p>
+          <pre>$bmi = $weight / (($height / 100) ** 2);</pre>
+          <span class="learn-tag">type casting, math in PHP</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="6">
+        <div class="step-card">
+          <h3>Categorize the result</h3>
+          <p>Map the BMI number to a category using if/elseif.</p>
+          <table class="cat-table">
+            <tr><th>BMI range</th><th>Category</th></tr>
+            <tr><td>&lt; 18.5</td><td class="pill under">Underweight</td></tr>
+            <tr><td>18.5 – 24.9</td><td class="pill normal">Normal</td></tr>
+            <tr><td>25 – 29.9</td><td class="pill over">Overweight</td></tr>
+            <tr><td>30+</td><td class="pill obese">Obese</td></tr>
+          </table>
+          <span class="learn-tag">conditional chains</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="7">
+        <div class="step-card">
+          <h3>Display the result safely</h3>
+          <p>Echo the BMI and category back to the page, escaping any user-provided output.</p>
+          <pre>echo htmlspecialchars($category);</pre>
+          <span class="learn-tag">output escaping · security habit</span>
+        </div>
+      </div>
+
+      <div class="step" data-n="8">
+        <div class="step-card">
+          <h3>Polish</h3>
+          <p>Round the BMI to one decimal, re-fill the form with the submitted values, and add a bit of CSS so it feels finished.</p>
+          <pre>round($bmi, 1);</pre>
+          <span class="learn-tag">round(), sticky form values, UX</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="recap">
+      <h2>Skills gained from this project</h2>
+      <div class="recap-grid">
+        <span>Forms & $_POST</span>
+        <span>Request method detection</span>
+        <span>Input validation</span>
+        <span>Type casting & math</span>
+        <span>Conditional logic</span>
+        <span>Output escaping</span>
+        <span>UX polish</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Finish this, then it's on to the next project on the list.
+</footer>
+
+</body>
+</html>
