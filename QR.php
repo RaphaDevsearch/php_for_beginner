@@ -1,29 +1,38 @@
 <?php
 
 /**
- * Validates whatever the person typed as a "link" to turn into a QR code.
+ * Validates the input based on which mode was selected in the dropdown.
  *
- * Returns: ['valid' => true, 'value' => 'https://...']
+ * - "link" mode: must pass FILTER_VALIDATE_URL, same as before
+ * - "text" mode: any non-empty text is allowed — a QR code can encode
+ *   plain words just as easily as a URL, so the rule here is much looser
+ *
+ * Returns: ['valid' => true, 'value' => '...']
  *      or: ['valid' => false, 'reason' => '...']
- *
- * Same shape as validateScore() from your Grade Calculator — one function,
- * one job: decide if this piece of input is usable, and say why if not.
  */
-function validateLink(string $rawLink): array {
+function validateInput(string $type, string $rawValue): array {
 
-    // Nothing typed yet — this is the normal "before submit" state, not an error
-    if ($rawLink === '') {
+    if ($rawValue === '') {
         return ['valid' => false, 'reason' => 'blank'];
     }
 
-    // filter_var with FILTER_VALIDATE_URL checks the string actually looks
-    // like a real URL (has a scheme like http/https, a valid structure, etc.)
-    // It returns the URL back if valid, or false if not.
-    if (filter_var($rawLink, FILTER_VALIDATE_URL) === false) {
-        return ['valid' => false, 'reason' => 'not a valid URL'];
+    if ($type === 'link') {
+        if (filter_var($rawValue, FILTER_VALIDATE_URL) === false) {
+            return ['valid' => false, 'reason' => 'not a valid URL'];
+        }
+        return ['valid' => true, 'value' => $rawValue];
     }
 
-    return ['valid' => true, 'value' => $rawLink];
+    // "text" mode — just cap the length so the QR code doesn't become
+    // impossible to scan (very long text makes a very dense QR code).
+    // Using strlen() here instead of mb_strlen() on purpose: strlen()
+    // needs no extra PHP extension, while mb_strlen() requires "mbstring"
+    // to be enabled — a common thing to be missing on local dev setups.
+    if (strlen($rawValue) > 300) {
+        return ['valid' => false, 'reason' => 'text is too long (max 300 characters)'];
+    }
+
+    return ['valid' => true, 'value' => $rawValue];
 }
 
 
@@ -46,29 +55,33 @@ function buildQrCodeUrl(string $link, int $size = 300): string {
  * as one HTML string. Same separation-of-concerns rule as before: this function
  * only returns text, it doesn't calculate or validate anything itself.
  */
-function buildResultHtml(?string $validLink, ?string $reason): string {
+function buildResultHtml(?string $validValue, ?string $reason, string $type): string {
 
     // Nothing submitted yet
-    if ($validLink === null && $reason === null) {
+    if ($validValue === null && $reason === null) {
         return 'Your QR code will appear here';
     }
 
     // Failed validation — but skip showing an error for a simple blank field
-    if ($validLink === null) {
+    if ($validValue === null) {
         if ($reason === 'blank') {
             return 'Your QR code will appear here';
         }
-        return '<p class="error">Please enter a valid link (must include http:// or https://).</p>';
+        $message = $type === 'link'
+            ? 'Please enter a valid link (must include http:// or https://).'
+            : htmlspecialchars(ucfirst($reason)) . '.';
+        return '<p class="error">' . $message . '</p>';
     }
 
-    $qrUrl = buildQrCodeUrl($validLink);
+    $qrUrl = buildQrCodeUrl($validValue);
 
-    // Escape everything printed — the link came from user input
-    $safeLink = htmlspecialchars($validLink);
+    // Escape everything printed — the value came from user input
+    $safeValue = htmlspecialchars($validValue);
     $safeQrUrl = htmlspecialchars($qrUrl);
 
     return '<div class="qr-output">'
-         . '<img src="' . $safeQrUrl . '" alt="QR code for ' . $safeLink . '" class="qr-image">'
+         . '<img src="' . $safeQrUrl . '" alt="QR code for ' . $safeValue . '" class="qr-image">'
+         . '<p class="qr-value">' . $safeValue . '</p>'
          . '<a href="' . $safeQrUrl . '" download="qrcode.png" class="qr-download">Download QR code</a>'
          . '</div>';
 }
@@ -77,22 +90,29 @@ function buildResultHtml(?string $validLink, ?string $reason): string {
 // ---------- Main logic ----------
 
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
-$rawLink = $_POST['link'] ?? '';
+$rawValue = $_POST['value'] ?? '';
+$rawType = $_POST['type'] ?? 'link';
 
-$validLink = null;
+// Whitelist validation: only these two values are ever allowed for $type,
+// no matter what actually arrives in $_POST — protects against someone
+// submitting an unexpected value for the dropdown.
+$allowedTypes = ['link', 'text'];
+$type = in_array($rawType, $allowedTypes, true) ? $rawType : 'link';
+
+$validValue = null;
 $reason = null;
 
 if ($isPost) {
-    $result = validateLink($rawLink);
+    $result = validateInput($type, $rawValue);
 
     if ($result['valid']) {
-        $validLink = $result['value'];
+        $validValue = $result['value'];
     } else {
         $reason = $result['reason'];
     }
 }
 
-$resultHtml = buildResultHtml($validLink, $reason);
+$resultHtml = buildResultHtml($validValue, $reason, $type);
 
 ?>
 <!DOCTYPE html>
@@ -161,6 +181,24 @@ $resultHtml = buildResultHtml($validLink, $reason);
   .card-body{padding:30px 28px 28px;}
 
   .field-top{font-family:'JetBrains Mono', monospace; font-size:0.74rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:12px;}
+
+  .type-select select{
+    width:100%;
+    font-family:'JetBrains Mono', monospace; font-size:0.9rem; color:var(--ink);
+    background:var(--paper); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; outline:none; cursor:pointer;
+    appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2354577A' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .type-select select:focus{border-color:var(--teal); box-shadow:0 0 0 3px #E4F6F3;}
+
+  .qr-value{
+    font-family:'JetBrains Mono', monospace; font-size:0.85rem; color:var(--ink-soft);
+    word-break:break-word; text-align:center; max-width:280px;
+  }
 
   .link-field{
     display:flex; align-items:center; gap:10px;
@@ -235,10 +273,24 @@ $resultHtml = buildResultHtml($validLink, $reason);
     </div>
 
     <div class="card-body">
-      <div class="field-top">Link</div>
+      <div class="field-top">Type</div>
+
+      <div class="type-select">
+        <select name="type" id="typeSelect">
+          <option value="link" <?= $type === 'link' ? 'selected' : '' ?>>Link (URL)</option>
+          <option value="text" <?= $type === 'text' ? 'selected' : '' ?>>Text</option>
+        </select>
+      </div>
+
+      <div class="field-top" style="margin-top:18px;">Value</div>
 
       <div class="link-field">
-        <input type="text" name="link" placeholder="https://www.example.com" value="<?= htmlspecialchars($rawLink) ?>">
+        <input
+          type="text"
+          name="value"
+          id="valueInput"
+          placeholder="<?= $type === 'link' ? 'https://www.example.com' : 'e.g. I love you' ?>"
+          value="<?= htmlspecialchars($rawValue) ?>">
       </div>
 
       <div class="divider"></div>
@@ -250,6 +302,19 @@ $resultHtml = buildResultHtml($validLink, $reason);
   </form>
 
 </div>
+
+<script>
+  // Just a UX nicety: swaps the placeholder text immediately when the
+  // dropdown changes, so the hint matches before the form is even submitted.
+  const typeSelect = document.getElementById('typeSelect');
+  const valueInput = document.getElementById('valueInput');
+
+  typeSelect.addEventListener('change', () => {
+    valueInput.placeholder = typeSelect.value === 'link'
+      ? 'https://www.example.com'
+      : 'e.g. I love you';
+  });
+</script>
 
 </body>
 </html>
