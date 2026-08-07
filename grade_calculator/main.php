@@ -110,6 +110,64 @@ function averageToGrade(float $average): string {
   return 'F';
 }
 
+/**
+ * Builds the full result HTML as one string — score chips, average,
+ * grade badge, and any validation errors — so the markup only ever
+ * needs a single echo point. No PHP logic scattered through the HTML.
+ *
+ * @param array      $validScores  the numbers that passed validation
+ * @param float|null $average      result from calculateAverage(), or null
+ * @param string|null $grade       result from averageToGrade(), or null
+ * @param array      $errors       messages from validateScores()
+ */
+function buildResultHtml(array $validScores, ?float $average, ?string $grade, array $errors): string {
+
+  // Nothing submitted yet — this is the default "before submit" state
+  if ($average === null && empty($errors)) {
+    return 'Result will render here';
+  }
+
+  $html = '';
+
+  // --- Errors first, if any exist ---
+  // Shown even if some scores were still valid, so the person knows
+  // something was ignored rather than silently dropped.
+  if (!empty($errors)) {
+    $html .= '<div class="result-errors">';
+    foreach ($errors as $error) {
+      // Escape every value that came from user input, always
+      $html .= '<p class="error">' . htmlspecialchars($error) . '</p>';
+    }
+    $html .= '</div>';
+  }
+
+  // --- No valid scores at all — nothing to average, stop here ---
+  if ($average === null) {
+    return $html . '<p class="error">Enter at least one valid score.</p>';
+  }
+
+  // --- Score chips: one per valid score used in the calculation ---
+  $html .= '<div class="score-row">';
+  foreach ($validScores as $score) {
+    // htmlspecialchars is technically redundant here since these are
+    // already validated floats, not raw strings — but staying in the
+    // habit of escaping anything printed keeps the rule simple: no exceptions.
+    $html .= '<span class="score-chip">' . htmlspecialchars((string) $score) . '</span>';
+  }
+  $html .= '</div>';
+
+  // --- Average + grade badge ---
+  // number_format rounds/pads to 1 decimal place for clean display (e.g. 85.0, not 85)
+  $formattedAverage = number_format($average, 1);
+
+  $html .= '<div class="avg-out">';
+  $html .= '<span class="num">' . htmlspecialchars($formattedAverage) . '</span>';
+  $html .= '<span class="grade-badge">GRADE ' . htmlspecialchars($grade) . '</span>';
+  $html .= '</div>';
+
+  return $html;
+}
+
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 $rawScores = $_POST['scores'] ?? [];
 $debugHtml = '';
