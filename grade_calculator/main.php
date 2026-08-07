@@ -1,3 +1,15 @@
+<?php
+
+$isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
+$debugHtml = '';
+
+if ($isPost) {
+    // Temporary: just confirming the array arrives correctly.
+    // This gets replaced with real validation + calculation next.
+    $debugHtml = '<pre>' . htmlspecialchars(print_r($_POST, true)) . '</pre>';
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -187,7 +199,6 @@
 
   <p class="lead">Enter a set of scores and get back the average and the letter grade it converts to.</p>
 
-  
   <form class="form-card" method="POST" action="">
     <div class="card-strip">
       <span>grad_calculator.php</span>
@@ -240,7 +251,9 @@
         <button type="button" class="clear-link" id="clearBtn">Clear fields</button>
       </div>
 
-      <div class="result-shell">Result will render here</div>
+      <div class="result-shell">
+        <?= $debugHtml !== '' ? $debugHtml : 'Result will render here' ?>
+      </div>
     </div>
   </form>
 
