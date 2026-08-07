@@ -1,12 +1,94 @@
 <?php
 
+/**
+ * Checks a single raw score string and tells you what's wrong with it, if anything.
+ *
+ * Returns an array shaped like:
+ *   ['valid' => true, 'value' => 78.0]                     — passed, ready to use
+ *   ['valid' => false, 'reason' => 'not a number']          — failed, with why
+ *
+ * Keeping this as its own function means the "what makes a score valid"
+ * rule lives in exactly one place — reusable, and easy to test on its own.
+ */
+function validateScore(string $rawScore): array {
+
+  // Blank field — not an error, just "unused"
+  if ($rawScore === '') {
+    return ['valid' => false, 'reason' => 'blank'];
+  }
+
+  // Not a number at all (e.g. "abc")
+  if (!is_numeric($rawScore)) {
+    return ['valid' => false, 'reason' => 'not a number'];
+  }
+
+  $number = (float) $rawScore;
+  
+  // Outside the allowed range
+  if ($number < 0 || $number > 100) {
+    return ['valid' => false, 'reason' => 'out of range'];
+  }
+
+  // Passed everything
+  return ['valid' => true, 'value' => $number];
+}
+
+
+/**
+ * Runs every raw score through validateScore(), and sorts the results
+ * into two clean arrays: the numbers you can actually use, and the
+ * error messages for anything rejected (blanks are silently skipped,
+ * not treated as errors).
+ *
+ * Returns: ['scores' => [...], 'errors' => [...]]
+ */
+function validateScores(array $rawScores): array {
+  $validScores = [];
+  $errors = [];
+
+  foreach ($rawScores as $index => $rawScore) {
+    $result = validateScore($rawScore);
+
+    if ($result['valid']) {
+      $validScores[] = $result['value'];
+    } elseif ($result['reason'] !== 'blank') {
+      // Only blanks get skipped silently — everything else is a real error
+      $errors[] = "Score #" . ($index + 1) . ": " . $result['reason'] . ".";
+    }
+  }
+  return ['scores' => $validScores, 'errors' => $errors];
+}
+
+/**
+ * Calculates the average of a set of already-validated scores.
+ *
+ * Returns the average as a float, or null if the array is empty —
+ * this matters because dividing by zero (count() would be 0) is not
+ * allowed in PHP and would throw an error otherwise.
+ */
+function calculateAverage(array $validScores): ?float {
+
+  // Guard first: no scores means no average to calculate
+  if (count($validScores) === 0) {
+    return null;
+  }
+
+  $total = array_sum($validScores); // adds every value in the array together
+  $count = count($validScores);     // how many scores are in the array
+
+  return $total / $count;
+}
+
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
+$rawScores = $_POST['scores'] ?? [];
 $debugHtml = '';
 
 if ($isPost) {
-    // Temporary: just confirming the array arrives correctly.
-    // This gets replaced with real validation + calculation next.
-    $debugHtml = '<pre>' . htmlspecialchars(print_r($_POST, true)) . '</pre>';
+  // Temporary: just confirming the array arrives correctly.
+  // This gets replaced with real validation + calculation next.
+  $debugHtml = '<pre>' . htmlspecialchars(print_r($rawScores, true)) . '</pre>';
+  $total = getSum($rawScores);
+  
 }
 
 ?>
