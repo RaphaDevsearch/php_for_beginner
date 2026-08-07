@@ -364,6 +364,54 @@ $resultHtml = buildResultHtml($validScores, $average, $grade, $errors);
     background:repeating-linear-gradient(135deg, rgba(20,22,43,0.02) 0 10px, transparent 10px 20px);
   }
   .result-shell::before{content:'○'; font-size:9px;}
+  /* Row of score chips */
+  .score-row{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+  }
+  .score-chip{
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--paper-dim);
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 4px 9px;
+  }
+  
+  /* Average number + grade badge */
+  .avg-out{
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+  }
+  .avg-out .num{
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+  }
+  .grade-badge{
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+  }
+  
+  /* Error messages */
+  .result-errors{
+      margin-bottom: 12px;
+  }
+  .error{
+      color: #D9534F;
+      font-weight: 600;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+  }
 
   @media (max-width:520px){
     body{padding:44px 16px 60px;}
