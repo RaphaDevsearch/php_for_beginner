@@ -79,6 +79,37 @@ function calculateAverage(array $validScores): ?float {
   return $total / $count;
 }
 
+/**
+ * Maps a numeric average to a letter grade using a threshold table,
+ * instead of a chain of if/elseif/else.
+ *
+ * The array is ordered highest threshold first. We walk through it
+ * top to bottom and return the first grade whose minimum score
+ * the average meets or exceeds.
+ */
+function averageToGrade(float $average): string {
+
+  // Each entry: minimum score needed => letter grade
+  // Order matters here — must stay highest to lowest
+  $gradeScale = [
+    90 => 'A',
+    80 => 'B',
+    70 => 'C',
+    60 => 'D',
+    0  => 'F',
+  ];
+
+  foreach ($gradeScale as $minScore => $grade) {
+    if ($average >= $minScore) {
+      return $grade; // first match wins, since we're going highest to lowest
+    }
+  }
+
+  // Should never actually reach here — 0 => 'F' always catches everything
+  // left, including negative numbers if they ever slipped through.
+  return 'F';
+}
+
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 $rawScores = $_POST['scores'] ?? [];
 $debugHtml = '';
@@ -88,7 +119,6 @@ if ($isPost) {
   // This gets replaced with real validation + calculation next.
   $debugHtml = '<pre>' . htmlspecialchars(print_r($rawScores, true)) . '</pre>';
   $total = getSum($rawScores);
-  
 }
 
 ?>
