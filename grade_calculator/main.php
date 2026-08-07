@@ -170,14 +170,30 @@ function buildResultHtml(array $validScores, ?float $average, ?string $grade, ar
 
 $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
 $rawScores = $_POST['scores'] ?? [];
-$debugHtml = '';
+
+// These stay at their "nothing submitted yet" defaults unless $isPost is true
+$validScores = [];
+$average = null;
+$grade = null;
+$errors = [];
 
 if ($isPost) {
-  // Temporary: just confirming the array arrives correctly.
-  // This gets replaced with real validation + calculation next.
-  $debugHtml = '<pre>' . htmlspecialchars(print_r($rawScores, true)) . '</pre>';
-  $total = getSum($rawScores);
+  // Step 4: loop + validate every raw score, sort into good vs. errors
+  $result = validateScores($rawScores);
+  $validScores = $result['scores'];
+  $errors = $result['errors'];
+
+  // Step 6: turn the valid scores into one average (null if none were valid)
+  $average = calculateAverage($validScores);
+
+  // Step 7: only map to a grade if there's actually an average to map
+  if ($average !== null) {
+      $grade = averageToGrade($average);
+  }
 }
+
+// Step 8: everything above becomes one finished HTML string here
+$resultHtml = buildResultHtml($validScores, $average, $grade, $errors);
 
 ?>
 <!DOCTYPE html>
@@ -422,7 +438,7 @@ if ($isPost) {
       </div>
 
       <div class="result-shell">
-        <?= $debugHtml !== '' ? $debugHtml : 'Result will render here' ?>
+        <?= $resultHtml ?>
       </div>
     </div>
   </form>
