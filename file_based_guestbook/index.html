@@ -356,81 +356,82 @@
   <div class="wrap"><div class="divider"></div></div>
 
   <!-- ROADMAP -->
-  <section class="block" id="roadmap">
+ <section class="block" id="roadmap">
     <div class="wrap">
       <div class="section-head">
         <h2>Build roadmap</h2>
-        <p>Same approach as before — build in order, test after each step.</p>
+        <p>Function-first this time: build the core engine, prove it works with hardcoded values, <em>then</em> wire the form and validation around it. Less rework, and each piece is testable on its own before it ever touches user input.</p>
       </div>
-
+ 
       <div class="timeline">
-
+ 
+        <div class="eyebrow" style="margin-bottom:14px;">Phase 1 — Core logic first</div>
+ 
         <div class="step" data-n="1">
           <div class="step-card reveal">
-            <h3>Static form shell</h3>
-            <p>Two fields: <code>name</code> and <code>message</code>. Submit to self, same as always. Below the form, leave an empty spot where the message list will render.</p>
+            <h3>Write saveMessage() — the actual job of this project</h3>
+            <p>Before any form exists, answer the real question: "what does this project need to <em>do</em>?" Write <code>saveMessage(string $name, string $message): void</code> — it appends one entry to the file. Test it by calling it directly with hardcoded values: <code>saveMessage('Test', 'Hello world');</code> — no form, no $_POST, nothing else yet.</p>
+            <span class="learn-tag">core function</span>
           </div>
         </div>
-
+ 
         <div class="step" data-n="2">
           <div class="step-card reveal">
-            <h3>Detect POST, validate both fields</h3>
-            <p>Same shape as <code>validateScore()</code> — reject blank name or blank message. Decide a reasonable max length for the message so one visitor can't post a giant wall of text.</p>
+            <h3>Write getMessages() — prove you can read it back</h3>
+            <p>The other half of the core job: <code>getMessages(): array</code> reads the file and returns every saved entry. Handle "file doesn't exist yet" <em>inside</em> this function — it's this function's concern, not a separate step. Test with <code>var_dump(getMessages());</code> and confirm your Step 1 test message comes back.</p>
+            <span class="learn-tag">core function</span>
+          </div>
+        </div>
+ 
+        <div class="eyebrow" style="margin:34px 0 14px;">Phase 2 — Make input trustworthy</div>
+ 
+        <div class="step" data-n="3">
+          <div class="step-card reveal">
+            <h3>Write validateEntry() — now that saving/reading already works</h3>
+            <p>Only now do you decide what makes an entry <em>acceptable</em>: reject blank name or message, cap the message length. Same shape as <code>validateScore()</code> — one function, one job. Test it directly too, with a few hardcoded good and bad values, before it ever meets a real form.</p>
             <span class="learn-tag">validation</span>
           </div>
         </div>
-
-        <div class="step" data-n="3">
-          <div class="step-card reveal">
-            <h3>Decide the storage format</h3>
-            <p>Turn one entry into one line of text using <code>json_encode(['name' => ..., 'message' => ..., 'time' => ...])</code>. JSON-per-line avoids a real headache: if you used a plain separator like <code>|</code>, a message containing <code>|</code> would break your parsing later.</p>
-            <span class="learn-tag">data format</span>
-          </div>
-        </div>
-
+ 
+        <div class="eyebrow" style="margin:34px 0 14px;">Phase 3 — Connect it to the real world</div>
+ 
         <div class="step" data-n="4">
           <div class="step-card reveal">
-            <h3>Append the new entry to the file</h3>
-            <p><code>file_put_contents('guestbook.txt', $jsonLine . "\n", FILE_APPEND)</code> — the <code>"\n"</code> at the end matters, it's what keeps every entry on its own line.</p>
-            <span class="learn-tag">file I/O</span>
+            <h3>Build the actual HTML form</h3>
+            <p>Only build this once the engine underneath it already works. Two fields: <code>name</code> and <code>message</code>. Submit to self, same as always.</p>
           </div>
         </div>
-
+ 
         <div class="step" data-n="5">
           <div class="step-card reveal">
-            <h3>Guard the "file doesn't exist yet" case</h3>
-            <p>Before reading, check <code>file_exists('guestbook.txt')</code>. On the very first visit ever, there's nothing to read — treat that as "zero messages," not an error.</p>
-            <span class="learn-tag">edge case</span>
+            <h3>Wire $_POST → validateEntry() → saveMessage()</h3>
+            <p>On POST: pull the raw values, run them through <code>validateEntry()</code>, and only call <code>saveMessage()</code> if they pass. Because all three functions already work on their own, this step is just plumbing — connecting pieces you've already proven, not debugging new logic.</p>
+            <span class="learn-tag">plumbing</span>
           </div>
         </div>
-
+ 
+        <div class="eyebrow" style="margin:34px 0 14px;">Phase 4 — Show the result</div>
+ 
         <div class="step" data-n="6">
           <div class="step-card reveal">
-            <h3>Read every line back</h3>
-            <p><code>file('guestbook.txt', FILE_IGNORE_NEW_LINES)</code> gives you an array of raw JSON strings — one per past message, oldest first.</p>
-            <span class="learn-tag">file I/O</span>
-          </div>
-        </div>
-
-        <div class="step" data-n="7">
-          <div class="step-card reveal">
-            <h3>Decode each line back into data</h3>
-            <p>Loop with <code>foreach</code>, running <code>json_decode($line, true)</code> on each one to turn it back into an associative array — the reverse of Step 3.</p>
+            <h3>Call getMessages(), decode each entry</h3>
+            <p>Loop with <code>foreach</code> over whatever <code>getMessages()</code> returns, running <code>json_decode()</code> on each line to get back a usable array.</p>
             <span class="learn-tag">loops · arrays</span>
           </div>
         </div>
-
-        <div class="step" data-n="8">
+ 
+        <div class="step" data-n="7">
           <div class="step-card reveal">
             <h3>Build $resultHtml, escape, polish</h3>
             <p>Build the full message list as one string in the top PHP block — one card per entry, escaping <code>name</code> and <code>message</code> with <code>htmlspecialchars()</code> individually. Echo once, same rule as every project before this.</p>
             <span class="learn-tag">separation of concerns</span>
           </div>
         </div>
-
+ 
       </div>
     </div>
   </section>
+ 
 
 </main>
 
